@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Youtube API</title>
+  <link rel="stylesheet" href="main.css">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <div class="container">
+      <!-- Top -->
+      <div class="container-header">
+        <div class="header">
+          <!-- left Side -->
+          <img class="channel-img" :src="channelInfo.profile_picture" alt="profile_img">
+          <!-- Right Side -->
+          <div class="channel-info">
+            <h1>{{ channelInfo?.name }}</h1>
+            <!-- <pre>{{ channelInfo.channel_id }}</pre> -->
+            <p>{{ channelInfo?.description }}</p>
+          </div>
+        </div>
+      </div>
+      <!-- List of Videos -->
+      <div class="content-container">
+        <div class="main-content">
+          <!-- Top -->
+          <div class="form-container">
+            <h1>Channel Videos</h1>
+            <form class="" @submit.prevent="addChannel" method="post">
+              <button class="add-button" type="submit">Add Videos</button>
+            </form>
+          </div>
+          <div class="video-container">
+            <div class="video-item" v-for="video in listOfVideos" >
+              <div class="video-card" :key="video.id">
+                <a :href="video.video_link" target="_blank">
+                  <img :src="video.thumbnail" alt="thumbnail">
+                  <h1>{{ video?.title }}</h1>
+                </a>
+                <div>
+                  <h1 v-if="video.description">Description: </h1>
+                  <p>{{ video?.description }}</p>
+                </div>
+              </div>
+            </div>
+            <!-- Bottom -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const { createApp, ref, reactive, onMounted } = Vue
+    createApp({
+      setup() {
+        const channelInfo = ref({});
+        const listOfVideos = reactive([]);
+        const expandDescription = ref(true)
+
+        const addChannel = () => {
+          axios.post('sync_youtube_channel.php').then(response => {
+            console.log('Channel added successfully')
+          }).catch(error => console.log('Error encountered: ', error));
+        }
+
+        const toggleDescription = () => {
+          expandDescription.value = !expandDescription.value;
+          console.log(expandDescription.value)
+        }
+
+        onMounted(() => {
+          axios.get('youtube_channel_json.php')
+            .then(response => {
+              console.log('Response: ', response.data);
+              channelInfo.value = response.data.channel_info;
+              listOfVideos.push(...response.data.videos);
+            })
+            .catch(error => {
+              console.log('Error:', error);
+            });
+        });
+
+        return {
+          channelInfo,
+          listOfVideos,
+          addChannel,
+          toggleDescription,
+          expandDescription
+        };
+      }
+    }).mount('#app');
+
+
+  </script>
+
+</body>
+
+
+
+</html>
