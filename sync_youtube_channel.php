@@ -35,53 +35,53 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
-while (true) {
-    $url = "{$baseUrl}?part=snippet&channelId={$channelId}&maxResults={$maxResults}&order=date&key={$apiKey}";
+// Testing
 
-    if (!empty($nextPageToken)) {
-        $url .= "&pageToken={$nextPageToken}";
-    }
+// while (true) {
+//     $url = "{$baseUrl}?part=snippet&channelId={$channelId}&maxResults={$maxResults}&order=date&key={$apiKey}";
 
-    // get the response
-    $res = file_get_contents($url);
+//     if (!empty($nextPageToken)) {
+//         $url .= "&pageToken={$nextPageToken}";
+//     }
 
-    if ($res) {
-        $data = json_decode($res, true);
+//     $res = file_get_contents($url);
 
-        foreach ($data['items'] as $item) {
-            $snippet = $item['snippet'];
-            $title = $snippet['title'];
-            $description = $snippet['description'];
-            $videoId = $item['id']['videoId'];
-            $videoLink = 'https://www.youtube.com/watch?v=' . $videoId;
-            $thumbnail = $snippet['thumbnails']['default']['url'];
+//     if ($res) {
+//         $data = json_decode($res, true);
 
-            $insertQuery = "INSERT INTO youtube_channel_videos (video_link, title, description, thumbnail) VALUES ('$videoLink', '$title', '$description', '$thumbnail')";
+//         foreach ($data['items'] as $item) {
+//             $snippet = $item['snippet'];
+//             $title = $snippet['title'];
+//             $description = $snippet['description'];
+//             $videoId = $item['id']['videoId'];
+//             $videoLink = 'https://www.youtube.com/watch?v=' . $videoId;
+//             $thumbnail = $snippet['thumbnails']['default']['url'];
 
-            if (mysqli_query($conn, $insertQuery)) {
-                echo "New video added successfully";
-                $videoCounter++;
-            } else {
-                echo "Error inserting the video: " . mysqli_error($conn);
-            }
+//             $insertQuery = "INSERT INTO youtube_channel_videos (video_link, title, description, thumbnail) VALUES ('$videoLink', '$title', '$description', '$thumbnail')";
 
-            if ($videoCounter >= $maxResults) {
-                // breaks the while loop as well if true
-                $reachedMaxResults = true;
-                break;
-            }
-        }
-        // checks if nextPageToken exists
-        $nextPageToken = isset($data['nextPageToken']) ? $data['nextPageToken'] : '';
+//             if (mysqli_query($conn, $insertQuery)) {
+//                 echo "New video added successfully";
+//                 $videoCounter++;
+//             } else {
+//                 echo "Error inserting the video: " . mysqli_error($conn);
+//             }
 
-        if (empty($nextPageToken) || $reachedMaxResults) {
-            break;
-        }
-    } else {
-        echo "Error encountered!";
-        break;
-    }
+//             if ($videoCounter >= $maxResults) {
+//                 // breaks the while loop as well if true
+//                 $reachedMaxResults = true;
+//                 break;
+//             }
+//         }
+//         $nextPageToken = isset($data['nextPageToken']) ? $data['nextPageToken'] : '';
 
-}
+//         if (empty($nextPageToken) || $reachedMaxResults) {
+//             break;
+//         }
+//     } else {
+//         echo "Error encountered!";
+//         break;
+//     }
+
+// }
 
 mysqli_close($conn);
