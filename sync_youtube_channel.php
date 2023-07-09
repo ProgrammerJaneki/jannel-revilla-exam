@@ -1,21 +1,8 @@
-<!-- Youtube Channel -->
-<!--
-PROFILE PICTURE: snippet: { thumbnails: {default: {url; https://yt3.ggpht.com/urNLBJGryDamao5r0jmlTg84mIBOoaeJd6XR67j4nuRd0iRvv5g-MUgaowsWKCs8V_t4KwST=s88-c-k-c0x00ffffff-no-rj}} }
-NAME: snippet: { title: NBA }
-DESCRIPTION: snippet: { description: The NBA is the premier professional basketball league ... }
--->
-<!-- YOUTUBE CHANNEL VIDEOS -->
-<!--
-VIDEO ID: id: {videoId: 4uDKhPRjIu8}
-TITLE: snippet: { title: Jayson Tatum Pulled Up To #NYvsNY 👀 | #Shorts }
-DESCRIPTION: snippet: { description:  }
-THUMBNAIL: snippet: {thumbnails: { default: { url: https://i.ytimg.com/vi/4uDKhPRjIu8/default.jpg } }}
--->
-
 <?php
+
 $apiKey = 'AIzaSyDyeZBYAblc3V4TWlPM-oObkIN7r77PbvE';
 $channelId = 'UCWJ2lWNubArHWmf3FIHbfcQ';
-$maxResults = 100;
+$maxResults = 2;
 
 $baseUrl = "https://youtube.googleapis.com/youtube/v3/search";
 $nextPageToken = '';
@@ -36,6 +23,60 @@ if (!$conn) {
 }
 
 // Testing
+$url = "https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=UCWJ2lWNubArHWmf3FIHbfcQ&maxResults=1&order=date&key=AIzaSyDyeZBYAblc3V4TWlPM-oObkIN7r77PbvE";
+
+$res = file_get_contents($url);
+
+if ($res) {
+    $data = json_decode($res, true);
+
+    if (isset($data['items'][0])) {
+
+        $first_item = $data['items'][0];
+        $snippet = $first_item['snippet'];
+        $title = $snippet['title'];
+        $description = $snippet['description'];
+        $videoId = $first_item['id']['videoId'];
+        $videoLink = 'https://www.youtube.com/watch?v=' . $videoId;
+        $thumbnail = $snippet['thumbnails']['default']['url'];
+
+        // $insertQuery = "INSERT INTO youtube_channel_videos (video_link, title, description, thumbnail)
+        // VALUES ('$videoLink', '$title', '$description', '$thumbnail')";
+
+        // $videoLink = 'https://www.youtube.com/watch?v=test1';
+        // $title = 'Test Video 2';
+        // $description = 'This is a test video 1';
+        // $thumbnail = 'https://i.ytimg.com/vi/u7JIo8ABeTs/default.jpg';
+
+        $data_array = array(
+            'title' => $title,
+            'description' => $description,
+            'videoLink' => $videoLink,
+            'thumbnail' => $thumbnail,
+        );
+
+        $insertQuery = "INSERT INTO youtube_channel_videos (video_link, title, description, thumbnail) VALUES ('$videoLink', '$title', '$description', '$thumbnail')";
+
+        if (mysqli_query($conn, $insertQuery)) {
+            echo "New video added successfully.";
+        } else {
+            echo "Error: " . $sql . "<br>" . mysqli_error($conn);
+        }
+
+        // mysqli_query($conn, $insertQuery);
+
+        // echo json_encode($data_array);
+
+        // $insertQuery = "INSERT INTO youtube_channel_videos (video_link, title, description, thumbnail) VALUES ('$videoLink', '$title', '$description', '$thumbnail')";
+
+        // if (mysqli_query($conn, $insertQuery)) {
+        //     echo "New record created successfully";
+        // } else {
+        //     echo "New record not created successfully";
+        // }
+    }
+    // echo json_encode($data);
+}
 
 // while (true) {
 //     $url = "{$baseUrl}?part=snippet&channelId={$channelId}&maxResults={$maxResults}&order=date&key={$apiKey}";
@@ -85,3 +126,5 @@ if (!$conn) {
 // }
 
 mysqli_close($conn);
+
+?>
