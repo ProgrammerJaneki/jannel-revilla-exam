@@ -1,12 +1,14 @@
 <?php
 
-$apiKey = 'AIzaSyDyeZBYAblc3V4TWlPM-oObkIN7r77PbvE';
+// $apiKey = 'AIzaSyDyeZBYAblc3V4TWlPM-oObkIN7r77PbvE';
+// $apiKey = 'AIzaSyDqG6QH_a5ZwnzEvTgOz-GXpVKbbpjq-Q4';
+$apiKey = 'AIzaSyC5AGkcukgjgJXFaHBDdex9dLMDHrtAiGY';
 $channelId = 'UCWJ2lWNubArHWmf3FIHbfcQ';
-$maxResults = 2;
+$maxResults = 100;
 
 $baseUrl = "https://youtube.googleapis.com/youtube/v3/search";
 $nextPageToken = '';
-$videoCounter = 0;
+// $videoCounter = 0;
 $reachedMaxResults = false;
 
 // $response = file_get_contents($url);
@@ -22,109 +24,78 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
+// Retrieve the total count of items in youtub_channel_videos
+$countQuery = "SELECT COUNT(*) AS total FROM youtube_channel_videos";
+$countResult = mysqli_query($conn, $countQuery);
+$countData = mysqli_fetch_assoc($countResult);
+$totalItems = $countData['total'];
+
+// $videoCounter = $totalItems;
+
 // Testing
-$url = "https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=UCWJ2lWNubArHWmf3FIHbfcQ&maxResults=1&order=date&key=AIzaSyDyeZBYAblc3V4TWlPM-oObkIN7r77PbvE";
+// $url = "https://youtube.googleapis.com/youtube/v3/search?part=snippet&channelId=UCWJ2lWNubArHWmf3FIHbfcQ&maxResults=1&order=date&key=AIzaSyDyeZBYAblc3V4TWlPM-oObkIN7r77PbvE";
+$url = "{$baseUrl}?part=snippet&channelId={$channelId}&maxResults={$maxResults}&order=date&key={$apiKey}";
 
-$res = file_get_contents($url);
+echo "INITIAL <br>";
+while (!$reachedMaxResults || $totalItems <= $maxResults) {
+    echo "CHECK";
+    // checks if nextPageToken has been filled below
+    if (!empty($nextPageToken)) {
+        $url .= "&pageToken={$nextPageToken}";
+    }
 
-if ($res) {
-    $data = json_decode($res, true);
+    // executes the given url
+    $res = file_get_contents($url);
 
-    if (isset($data['items'][0])) {
+    if ($res) {
+        $data = json_decode($res, true);
+        // each result has maximum of 50 items
+        foreach ($data['items'] as $item) {
+            // Retrieve the total count of items in youtub_channel_videos
+            // $countQuery = "SELECT COUNT(*) AS total FROM youtube_channel_videos";
+            // $countResult = mysqli_query($conn, $countQuery);
+            // $countData = mysqli_fetch_assoc($countResult);
+            // $totalItems = $countData['total'];
 
-        $first_item = $data['items'][0];
-        $snippet = $first_item['snippet'];
-        $title = $snippet['title'];
-        $description = $snippet['description'];
-        $videoId = $first_item['id']['videoId'];
-        $videoLink = 'https://www.youtube.com/watch?v=' . $videoId;
-        $thumbnail = $snippet['thumbnails']['default']['url'];
+            if ($totalItems >= $maxResults) {
+                echo "Maximum items has been met!";
+                $reachedMaxResults = true;
+                break;
+            }
 
-        // $insertQuery = "INSERT INTO youtube_channel_videos (video_link, title, description, thumbnail)
-        // VALUES ('$videoLink', '$title', '$description', '$thumbnail')";
+            $snippet = $item['snippet'];
+            $title = $snippet['title'];
+            $description = $snippet['description'];
+            $videoId = $item['id']['videoId'];
+            $videoLink = 'https://www.youtube.com/watch?v=' . $videoId;
+            $thumbnail = $snippet['thumbnails']['default']['url'];
 
-        // $videoLink = 'https://www.youtube.com/watch?v=test1';
-        // $title = 'Test Video 2';
-        // $description = 'This is a test video 1';
-        // $thumbnail = 'https://i.ytimg.com/vi/u7JIo8ABeTs/default.jpg';
+            $insertQuery = "INSERT INTO youtube_channel_videos (video_link, title, description, thumbnail) VALUES (?, ?, ?, ?)";
 
-        $data_array = array(
-            'title' => $title,
-            'description' => $description,
-            'videoLink' => $videoLink,
-            'thumbnail' => $thumbnail,
-        );
+            $stmt = mysqli_prepare($conn, $insertQuery);
+            mysqli_stmt_bind_param($stmt, "ssss", $videoLink, $title, $description, $thumbnail);
 
-        $insertQuery = "INSERT INTO youtube_channel_videos (video_link, title, description, thumbnail) VALUES ('$videoLink', '$title', '$description', '$thumbnail')";
+            if (mysqli_stmt_execute($stmt)) {
+                echo "New video added successfully.";
+                $totalItems++;
+            } else {
+                echo "Error inserting the video: " . mysqli_error($conn);
+            }
 
-        if (mysqli_query($conn, $insertQuery)) {
-            echo "New video added successfully.";
-        } else {
-            echo "Error: " . $sql . "<br>" . mysqli_error($conn);
+            mysqli_stmt_close($stmt);
         }
 
-        // mysqli_query($conn, $insertQuery);
+        $nextPageToken = isset($data['nextPageToken']) ? $data['nextPageToken'] : '';
 
-        // echo json_encode($data_array);
+        if (empty($nextPageToken)) {
+            $reachedMaxResults = true;
+        }
 
-        // $insertQuery = "INSERT INTO youtube_channel_videos (video_link, title, description, thumbnail) VALUES ('$videoLink', '$title', '$description', '$thumbnail')";
-
-        // if (mysqli_query($conn, $insertQuery)) {
-        //     echo "New record created successfully";
-        // } else {
-        //     echo "New record not created successfully";
-        // }
+    } else {
+        echo "Error encountered";
     }
-    // echo json_encode($data);
+
 }
-
-// while (true) {
-//     $url = "{$baseUrl}?part=snippet&channelId={$channelId}&maxResults={$maxResults}&order=date&key={$apiKey}";
-
-//     if (!empty($nextPageToken)) {
-//         $url .= "&pageToken={$nextPageToken}";
-//     }
-
-//     $res = file_get_contents($url);
-
-//     if ($res) {
-//         $data = json_decode($res, true);
-
-//         foreach ($data['items'] as $item) {
-//             $snippet = $item['snippet'];
-//             $title = $snippet['title'];
-//             $description = $snippet['description'];
-//             $videoId = $item['id']['videoId'];
-//             $videoLink = 'https://www.youtube.com/watch?v=' . $videoId;
-//             $thumbnail = $snippet['thumbnails']['default']['url'];
-
-//             $insertQuery = "INSERT INTO youtube_channel_videos (video_link, title, description, thumbnail) VALUES ('$videoLink', '$title', '$description', '$thumbnail')";
-
-//             if (mysqli_query($conn, $insertQuery)) {
-//                 echo "New video added successfully";
-//                 $videoCounter++;
-//             } else {
-//                 echo "Error inserting the video: " . mysqli_error($conn);
-//             }
-
-//             if ($videoCounter >= $maxResults) {
-//                 // breaks the while loop as well if true
-//                 $reachedMaxResults = true;
-//                 break;
-//             }
-//         }
-//         $nextPageToken = isset($data['nextPageToken']) ? $data['nextPageToken'] : '';
-
-//         if (empty($nextPageToken) || $reachedMaxResults) {
-//             break;
-//         }
-//     } else {
-//         echo "Error encountered!";
-//         break;
-//     }
-
-// }
-
 mysqli_close($conn);
 
 ?>

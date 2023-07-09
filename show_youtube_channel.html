@@ -41,6 +41,7 @@
                         </button>
                      </form>
                   </div>
+                  <div>{{ videoCount }}</div>
                   <div class="video-container">
                      <div class="video-item" v-for="video in listOfVideos">
                         <div class="video-card" :key="video.id">
@@ -66,12 +67,13 @@
             setup() {
                const channelInfo = ref({});
                const listOfVideos = reactive([]);
+               const videoCount = ref({});
 
                const addChannel = () => {
                   axios
                      .post('sync_youtube_channel.php')
                      .then((response) => {
-                        console.log(response);
+                        console.log('Total: ', response);
                         console.log('Channel added successfully');
                      })
                      .catch((error) =>
@@ -86,6 +88,7 @@
                         console.log('Response: ', response.data);
                         channelInfo.value = response.data.channel_info;
                         listOfVideos.push(...response.data.videos);
+                        videoCount.value = response.data.video_count;
                      })
                      .catch((error) => {
                         console.log('Error:', error);
@@ -95,6 +98,7 @@
                return {
                   channelInfo,
                   listOfVideos,
+                  videoCount,
                   addChannel,
                };
             },

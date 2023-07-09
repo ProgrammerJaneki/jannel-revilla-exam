@@ -19,6 +19,9 @@ $channelResult = mysqli_query($conn, $channelQuery);
 $videoQuery = "SELECT * FROM youtube_channel_videos";
 $videoResults = mysqli_query($conn, $videoQuery);
 
+// Get the total of items in youtube_channel_videos
+$video_count = mysqli_num_rows($videoResults);
+
 // fetch data from channel result
 $channelData = mysqli_fetch_assoc($channelResult);
 
@@ -31,11 +34,11 @@ while ($row = mysqli_fetch_assoc($videoResults)) {
 // Close the database conenction
 mysqli_close($conn);
 
-
 // Combine channel information and video data
 $combinedData = [
     "channel_info" => $channelData,
-    "videos" => $videoData
+    "videos" => $videoData,
+    "video_count" => $video_count,
 ];
 
 // Convert to JSON FORMAT
