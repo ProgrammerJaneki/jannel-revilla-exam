@@ -1,8 +1,6 @@
 <?php
-// $apiKey = 'AIzaSyC5AGkcukgjgJXFaHBDdex9dLMDHrtAiGY';
-$apiKey = 'AIzaSyD-bfRUd_roKr6T6cPeOyGy5uyryOSabLs';
-$channelId = 'UCWJ2lWNubArHWmf3FIHbfcQ';
-$maxResults = 100;
+// $apiKey = 'AIzaSyCRDBdSn2b1P1XRqWVQPPzfSO_U5HxvrbU';
+$apiKey = 'AIzaSyDOiJ5QGlFDGKnOhxp84TCQAeTL6j6j7Tc';
 
 $baseUrl = "https://youtube.googleapis.com/youtube/v3/search";
 $nextPageToken = '';
@@ -19,7 +17,19 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
-// Retrieve the total count of items in youtub_channel_videos
+$postRequest = file_get_contents('php://input');
+
+$postData = json_decode($postRequest, true);
+
+if (isset($postData['channelId']) && isset($postData['numVids'])) {
+    $channelId = $postData['channelId'];
+    $maxResults = $postData['numVids'];
+} else {
+    // echo "Please provide the channel id ad no. of videos";
+    die('Please provide the channel id and no. of videos');
+}
+
+// Retrieve the total count of items in youtube_channel_videos
 $countQuery = "SELECT COUNT(*) AS total FROM youtube_channel_videos";
 $countResult = mysqli_query($conn, $countQuery);
 $countData = mysqli_fetch_assoc($countResult);
@@ -97,7 +107,6 @@ while (!$reachedMaxResults || $totalItems <= $maxResults) {
             mysqli_stmt_bind_param($stmt, "ssss", $videoLink, $title, $description, $thumbnail);
 
             if (mysqli_stmt_execute($stmt)) {
-                echo "New video added successfully.";
                 $totalItems++;
             } else {
                 echo "Error inserting the video: " . mysqli_error($conn);
