@@ -36,7 +36,11 @@
                   <div class="form-container">
                      <h1>Channel Videos</h1>
                      <form class="" @submit.prevent="addChannel" method="post">
-                        <button class="add-button" type="submit">
+                        <button
+                           class="add-button"
+                           :disabled="videoCount >= maxResults"
+                           type="submit"
+                        >
                            Add Videos
                         </button>
                      </form>
@@ -65,15 +69,17 @@
          const { createApp, ref, reactive, onMounted } = Vue;
          createApp({
             setup() {
+               const maxResults = 100;
                const channelInfo = ref({});
                const listOfVideos = reactive([]);
                const videoCount = ref({});
 
                const addChannel = () => {
+                  console.log('hey');
                   axios
                      .post('sync_youtube_channel.php')
                      .then((response) => {
-                        console.log('Total: ', response);
+                        console.log('Response: ', response);
                         console.log('Channel added successfully');
                      })
                      .catch((error) =>
@@ -85,7 +91,6 @@
                   axios
                      .get('youtube_channel_json.php')
                      .then((response) => {
-                        console.log('Response: ', response.data);
                         channelInfo.value = response.data.channel_info;
                         listOfVideos.push(...response.data.videos);
                         videoCount.value = response.data.video_count;
@@ -100,6 +105,7 @@
                   listOfVideos,
                   videoCount,
                   addChannel,
+                  maxResults,
                };
             },
          }).mount('#app');
