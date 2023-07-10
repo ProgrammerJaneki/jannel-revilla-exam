@@ -1,5 +1,4 @@
 <?php
-// $apiKey = 'AIzaSyCRDBdSn2b1P1XRqWVQPPzfSO_U5HxvrbU';
 $apiKey = 'AIzaSyDOiJ5QGlFDGKnOhxp84TCQAeTL6j6j7Tc';
 
 $baseUrl = "https://youtube.googleapis.com/youtube/v3/search";
@@ -25,7 +24,6 @@ if (isset($postData['channelId']) && isset($postData['numVids'])) {
     $channelId = $postData['channelId'];
     $maxResults = $postData['numVids'];
 } else {
-    // echo "Please provide the channel id ad no. of videos";
     die('Please provide the channel id and no. of videos');
 }
 
@@ -92,7 +90,6 @@ while (!$reachedMaxResults || $totalItems <= $maxResults) {
                 break;
             }
 
-            // array values
             $snippet = $item['snippet'];
             $title = $snippet['title'];
             $description = $snippet['description'];
