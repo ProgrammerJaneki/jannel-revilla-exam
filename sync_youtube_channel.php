@@ -29,7 +29,7 @@ $totalItems = $countData['total'];
 $channelUrl = "https://youtube.googleapis.com/youtube/v3/channels?part=snippet&id={$channelId}&maxResults=1&key={$apiKey}";
 $url = "{$baseUrl}?part=snippet&channelId={$channelId}&maxResults={$maxResults}&order=date&key={$apiKey}";
 
-// Check if Youtube Name already exists
+// CHANNEL
 $channelName = "NBA";
 $channelQuery = "SELECT * FROM youtube_channels WHERE name = ?";
 $stmtChannel = mysqli_prepare($conn, $channelQuery);
@@ -62,6 +62,7 @@ if (mysqli_stmt_execute($stmtChannel)) {
     }
 }
 
+// CHANNEL VIDS
 while (!$reachedMaxResults || $totalItems <= $maxResults) {
 
     if (!empty($nextPageToken)) {
